@@ -24,9 +24,29 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - name: Run a multi-line script
+      - name:  test xp 1
         shell: cmd
         run: |
           attrib "C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe"
           "C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe" modify --add "Microsoft.VisualStudio.Component.WinXP" --installpath="C:\Program Files\Microsoft Visual Studio\2022\Enterprise" --quiet
            dir C:\ProgramData\Microsoft\VisualStudio\Packages
+      - name: test xp 2
+        run: |
+              Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+              $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+              $componentsToAdd = @(
+                "Microsoft.VisualStudio.Component.WinXP"
+              )
+              [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
+              $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
+              $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+              if ($process.ExitCode -eq 0)
+              {
+                  Write-Host "components have been successfully added"
+                  Get-ChildItem C:\ProgramData\Microsoft\VisualStudio\Packages\Microsoft.Windows.XPSupport.*
+              }
+              else
+              {
+                  Write-Host "components were not installed"
+                  exit 1
+              }
